@@ -7,6 +7,7 @@ async function clickText(page, labels) { const clicked = await page.evaluate((va
 export async function publishWithBrowser(input, config) {
   const platform = platforms[input.platform]; if (!platform) throw new Error('unsupported_platform');
   const profile = path.join(config.dataDir, 'profiles', input.platform, input.account.replace(/[^a-zA-Z0-9_.-]/g, '_')); await fs.mkdir(profile, { recursive: true });
+  await fs.mkdir('/tmp/fonts', { recursive: true });
   const browser = await puppeteer.launch({ args: chromium.args, executablePath: await chromium.executablePath(), headless: config.headless, userDataDir: profile, defaultViewport: { width: 1440, height: 1000 } });
   const page = (await browser.pages())[0] ?? await browser.newPage();
   try {

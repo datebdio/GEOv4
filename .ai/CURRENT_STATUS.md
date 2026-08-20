@@ -33,13 +33,13 @@ Status: Core vertical slice implemented; deployment baseline in verification
 ## In Progress
 
 - Production deployment verification
-- Platform-specific authenticated connector runtime
+- Authenticated account acceptance on each target platform
 
 ## Not Started
 
 - Additional AI Provider adapters beyond OpenAI-compatible APIs
 - Redis task execution
-- Authenticated platform publishing connectors
+- Authenticated platform sessions and live draft/publish acceptance
 
 ## Next Milestone
 
@@ -47,7 +47,8 @@ Complete isolated browser publishing connectors and authenticated acceptance.
 
 ## Latest Verification
 
-- Unit/API tests: 13 passed.
+- Automated tests: 17 passed (API 12, domain 3, connector 2).
+- Bundled Chromium launch and DOM rendering smoke passed.
 - Type checks: web, API and domain passed.
 - Production build: web, API and domain passed.
 - HTTP smoke: `/health` and `/api/v1/detections/mock` passed.

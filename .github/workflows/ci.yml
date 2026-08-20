@@ -45,3 +45,11 @@ jobs:
           tags: geov4-web:ci
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/publisher-connector/Dockerfile
+          push: false
+          tags: geov4-publisher-connector:ci
+          cache-from: type=gha,scope=publisher
+          cache-to: type=gha,mode=max,scope=publisher

@@ -54,3 +54,11 @@ Next: provider credentials, real provider adapter and persisted detection execut
 - Added provider-driven evidence-aware content generation.
 - Added isolated authenticated publication dispatch with idempotency and result/error persistence.
 - Expanded the verified suite to 15 API/domain tests.
+
+## 2026-08-21 — Isolated four-platform browser connector
+
+- Added a separately deployed Puppeteer/Chromium connector for Zhihu, Baijiahao, Toutiao and Sohu.
+- Added per-platform/account persistent browser profiles without storing plaintext passwords.
+- Added default draft-only mode, Bearer authentication, persistent idempotency and screenshot evidence.
+- Acquired and supply-chain checked the browser dependencies through Offline Bridge.
+- Verified a real bundled Chromium launch and DOM-rendering smoke test.

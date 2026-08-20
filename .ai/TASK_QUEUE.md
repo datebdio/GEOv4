@@ -26,7 +26,10 @@
 - [x] Content Studio foundation and immutable versions
 - [x] Four-channel exports and publishing records
 - [x] Effect tracking comparison API
-- [ ] Authenticated automatic publishing connectors
+- [x] Isolated browser publisher connector runtime
+- [x] Zhihu, Baijiahao, Toutiao and Sohu browser drivers
+- [ ] One-time authenticated session bootstrap for each real account
+- [ ] Live draft/publish acceptance on each real account
 
 ## Deployment
 
