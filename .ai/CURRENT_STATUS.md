@@ -11,6 +11,9 @@ Status: Foundation implementation in progress
 - Vue Vben Admin UI direction confirmed
 - AI-first repository workflow defined
 - README AI entrypoint created
+- Phase 1 monorepo and enterprise console foundation
+- Visibility analyzer baseline with tests
+- API build and HTTP smoke verification
 
 ## In Progress
 
@@ -28,3 +31,10 @@ Status: Foundation implementation in progress
 ## Next Milestone
 
 Complete the first traceable brand → prompt → detection vertical slice.
+
+## Latest Verification
+
+- Unit/API tests: 5 passed.
+- Type checks: web, API and domain passed.
+- Production build: web, API and domain passed.
+- HTTP smoke: `/health` and `/api/v1/detections/mock` passed.

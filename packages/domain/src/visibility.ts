@@ -9,7 +9,7 @@ export interface ProviderAnswer {
   provider: string;
   model: string;
   rawText: string;
-  citations?: string[];
+  citations?: readonly string[];
   latencyMs: number;
   inputTokens?: number;
   outputTokens?: number;

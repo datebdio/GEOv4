@@ -17,13 +17,16 @@ const menu = [
   { key: 'settings', label: '系统设置', icon: SettingOutlined },
 ];
 const title = computed(() => menu.find((item) => item.key === active.value)?.label ?? '总览');
+function selectMenu(info: { key: string | number }) {
+  active.value = String(info.key);
+}
 </script>
 
 <template>
   <a-layout class="shell">
     <a-layout-sider width="224" theme="dark">
       <div class="brand"><span class="brand-mark">G</span><span>GEOv4</span></div>
-      <a-menu v-model:selectedKeys="[active]" theme="dark" mode="inline" @select="({ key }) => active = String(key)">
+      <a-menu :selectedKeys="[active]" theme="dark" mode="inline" @select="selectMenu">
         <a-menu-item v-for="item in menu" :key="item.key">
           <component :is="item.icon" /><span>{{ item.label }}</span>
         </a-menu-item>
