@@ -103,8 +103,10 @@ export interface Repositories {
   };
   publications: {
     list(): Promise<PublicationRecord[]>;
+    get(id: string): Promise<PublicationRecord | null>;
     create(input: Omit<PublicationRecord, 'id' | 'status' | 'canonicalUrl' | 'notes' | 'publishedAt'>): Promise<PublicationRecord>;
     publish(id: string, canonicalUrl: string, notes?: string | null): Promise<PublicationRecord | null>;
+    setResult(id: string, result: { status: PublicationRecord['status']; canonicalUrl?: string | null; notes?: string | null }): Promise<PublicationRecord | null>;
   };
   effects: {
     list(): Promise<EffectRecord[]>;
@@ -198,8 +200,10 @@ export function createMySqlRepositories(connection: DatabaseConnection): Reposit
     },
     publications: {
       list: () => db.select().from(publicationRecords).orderBy(asc(publicationRecords.createdAt)),
+      async get(id) { return (await db.select().from(publicationRecords).where(eq(publicationRecords.id, id)).limit(1))[0] ?? null; },
       async create(input) { const id = randomUUID(); await db.insert(publicationRecords).values({ id, ...input }); return (await this.list()).find((item) => item.id === id)!; },
       async publish(id, canonicalUrl, notes) { const result = await db.update(publicationRecords).set({ status: 'published', canonicalUrl, notes, publishedAt: new Date() }).where(eq(publicationRecords.id, id)); return result[0].affectedRows ? (await this.list()).find((item) => item.id === id) ?? null : null; },
+      async setResult(id, result) { const updated = await db.update(publicationRecords).set({ ...result, publishedAt: result.status === 'published' ? new Date() : undefined }).where(eq(publicationRecords.id, id)); return updated[0].affectedRows ? this.get(id) : null; },
     },
     effects: {
       list: () => db.select().from(effectSnapshots).orderBy(asc(effectSnapshots.createdAt)),
@@ -248,8 +252,9 @@ export function createMemoryRepositories(): Repositories {
       async setStatus(id, status) { const row = contentRows.get(id); if (!row) return null; const updated = { ...row, status }; contentRows.set(id, updated); return updated; },
     },
     publications: {
-      async list() { return [...publicationRows.values()]; }, async create(input) { const duplicate = [...publicationRows.values()].find((row) => row.idempotencyKey === input.idempotencyKey); if (duplicate) return duplicate; const row: PublicationRecord = { id: randomUUID(), ...input, status: 'prepared', canonicalUrl: null, notes: null, publishedAt: null }; publicationRows.set(row.id, row); return row; },
+      async list() { return [...publicationRows.values()]; }, async get(id) { return publicationRows.get(id) ?? null; }, async create(input) { const duplicate = [...publicationRows.values()].find((row) => row.idempotencyKey === input.idempotencyKey); if (duplicate) return duplicate; const row: PublicationRecord = { id: randomUUID(), ...input, status: 'prepared', canonicalUrl: null, notes: null, publishedAt: null }; publicationRows.set(row.id, row); return row; },
       async publish(id, canonicalUrl, notes) { const row = publicationRows.get(id); if (!row) return null; const updated = { ...row, status: 'published' as const, canonicalUrl, notes: notes ?? null, publishedAt: new Date() }; publicationRows.set(id, updated); return updated; },
+      async setResult(id, result) { const row = publicationRows.get(id); if (!row) return null; const updated = { ...row, ...result, canonicalUrl: result.canonicalUrl ?? row.canonicalUrl, notes: result.notes ?? row.notes, publishedAt: result.status === 'published' ? new Date() : row.publishedAt }; publicationRows.set(id, updated); return updated; },
     },
     effects: { async list() { return [...effectRows.values()]; }, async create(input) { const row = { id: randomUUID(), ...input }; effectRows.set(row.id, row); return row; } },
   };

@@ -27,11 +27,13 @@ Status: Core vertical slice implemented; deployment baseline in verification
 - Content items, immutable versions, evidence URLs and approval workflow
 - Zhihu, Baijiahao, Toutiao and Sohu channel exports and idempotent publication records
 - Comparable pre/post publication effect snapshots
+- Evidence-aware AI content generation service
+- Authenticated idempotent HTTP publication dispatch protocol
 
 ## In Progress
 
 - Production deployment verification
-- Isolated automatic-publishing connectors
+- Platform-specific authenticated connector runtime
 
 ## Not Started
 

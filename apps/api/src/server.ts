@@ -4,6 +4,8 @@ import { connectDatabase } from './db/client.js';
 import { createMySqlRepositories } from './repositories.js';
 import { DetectionService } from './detection-service.js';
 import { AnthropicProvider, GeminiProvider, MockProvider, OpenAiCompatibleProvider, ProviderRegistry, type AiProvider } from './providers.js';
+import { ContentGenerationService } from './content-generation-service.js';
+import { HttpPublisherConnector, PublicationService } from './publication-service.js';
 
 const port = Number(process.env.API_PORT ?? 3100);
 const connection = connectDatabase();
@@ -16,7 +18,8 @@ if (process.env.PERPLEXITY_API_KEY) configuredProviders.push(new OpenAiCompatibl
 if (process.env.ANTHROPIC_API_KEY) configuredProviders.push(new AnthropicProvider({ apiKey: process.env.ANTHROPIC_API_KEY, defaultModel: process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-5' }));
 if (process.env.GEMINI_API_KEY) configuredProviders.push(new GeminiProvider({ apiKey: process.env.GEMINI_API_KEY, defaultModel: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash' }));
 const registry = new ProviderRegistry(configuredProviders);
-const app = createApp(repositories, new DetectionService(repositories, registry));
+const publication = process.env.PUBLISHER_CONNECTOR_URL && process.env.PUBLISHER_CONNECTOR_TOKEN ? new PublicationService(repositories, new HttpPublisherConnector({ endpoint: process.env.PUBLISHER_CONNECTOR_URL, token: process.env.PUBLISHER_CONNECTOR_TOKEN })) : undefined;
+const app = createApp(repositories, new DetectionService(repositories, registry), { contentGeneration: new ContentGenerationService(repositories, registry), publication });
 
 app.addHook('onClose', async () => connection.pool.end());
 

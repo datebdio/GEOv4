@@ -6,6 +6,8 @@ import type { Repositories } from './repositories.js';
 import type { DetectionService } from './detection-service.js';
 import { createHash } from 'node:crypto';
 import { renderChannelContent } from './publishing.js';
+import type { ContentGenerationService } from './content-generation-service.js';
+import type { PublicationService } from './publication-service.js';
 
 const requestSchema = z.object({
   prompt: z.string().min(1),
@@ -23,7 +25,7 @@ const taskSchema = z.object({ name: z.string().trim().min(1).max(160), promptId:
 const platformSchema = z.enum(['zhihu', 'baijiahao', 'toutiao', 'sohu']);
 const contentSchema = z.object({ brandId: z.string().uuid(), promptId: z.string().uuid().nullable().optional(), title: z.string().trim().min(1).max(300), bodyMarkdown: z.string().trim().min(20), evidenceUrls: z.array(z.string().url()).default([]) });
 
-export function createApp(repositories: Repositories, detections?: DetectionService) {
+export function createApp(repositories: Repositories, detections?: DetectionService, services?: { contentGeneration?: ContentGenerationService; publication?: PublicationService }) {
   const app = Fastify({ logger: false });
   app.register(cors, { origin: true });
 
@@ -105,6 +107,11 @@ export function createApp(repositories: Repositories, detections?: DetectionServ
     if (input.data.promptId && !(await repositories.prompts.get(input.data.promptId))) return reply.code(404).send({ error: 'prompt_not_found' });
     return reply.code(201).send(await repositories.contents.create(input.data));
   });
+  app.post('/api/v1/contents/generate', async (request, reply) => {
+    if (!services?.contentGeneration) return reply.code(503).send({ error: 'content_generation_unavailable' });
+    const input = z.object({ brandId: z.string().uuid(), promptId: z.string().uuid(), provider: z.string().min(1), model: z.string().optional(), evidenceUrls: z.array(z.string().url()).default([]), instructions: z.string().max(3000).optional() }).safeParse(request.body); if (!input.success) return reply.code(400).send({ error: input.error.flatten() });
+    try { return reply.code(201).send(await services.contentGeneration.generate(input.data)); } catch (error) { return reply.code(502).send({ error: error instanceof Error ? error.message : 'generation_failed' }); }
+  });
   app.post('/api/v1/contents/:id/versions', async (request, reply) => {
     const input = contentSchema.pick({ bodyMarkdown: true, evidenceUrls: true }).extend({ changeNote: z.string().max(500).nullable().optional() }).safeParse(request.body);
     if (!input.success) return reply.code(400).send({ error: input.error.flatten() });
@@ -132,6 +139,10 @@ export function createApp(repositories: Repositories, detections?: DetectionServ
   app.patch('/api/v1/publications/:id/published', async (request, reply) => {
     const input = z.object({ canonicalUrl: z.string().url(), notes: z.string().max(5000).nullable().optional() }).safeParse(request.body); if (!input.success) return reply.code(400).send({ error: input.error.flatten() });
     return (await repositories.publications.publish((request.params as { id: string }).id, input.data.canonicalUrl, input.data.notes)) ?? reply.code(404).send({ error: 'publication_not_found' });
+  });
+  app.post('/api/v1/publications/:id/dispatch', async (request, reply) => {
+    if (!services?.publication) return reply.code(503).send({ error: 'publisher_connector_unavailable' });
+    try { return await services.publication.dispatch((request.params as { id: string }).id); } catch (error) { return reply.code(502).send({ error: error instanceof Error ? error.message : 'publisher_failed' }); }
   });
 
   app.get('/api/v1/effects', () => repositories.effects.list());

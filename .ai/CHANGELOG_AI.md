@@ -51,3 +51,6 @@ Next: provider credentials, real provider adapter and persisted detection execut
 - Added idempotent publication preparation, canonical URL confirmation and effect snapshots.
 - Added operational Content Studio and Publishing Center pages.
 - Expanded the verified suite to 13 API/domain tests.
+- Added provider-driven evidence-aware content generation.
+- Added isolated authenticated publication dispatch with idempotency and result/error persistence.
+- Expanded the verified suite to 15 API/domain tests.

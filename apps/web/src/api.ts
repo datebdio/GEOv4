@@ -23,9 +23,11 @@ export const api = {
   opportunities: (brandId: string) => request<Opportunity[]>(`/api/v1/opportunities?brandId=${encodeURIComponent(brandId)}`),
   contents: () => request<ContentItem[]>('/api/v1/contents'),
   createContent: (input: { brandId: string; promptId?: string | null; title: string; bodyMarkdown: string; evidenceUrls: string[] }) => request<ContentItem>('/api/v1/contents', { method: 'POST', body: JSON.stringify(input) }),
+  generateContent: (input: { brandId: string; promptId: string; provider: string; evidenceUrls: string[]; instructions?: string }) => request<ContentItem>('/api/v1/contents/generate', { method: 'POST', body: JSON.stringify(input) }),
   setContentStatus: (id: string, status: ContentItem['status']) => request<ContentItem>(`/api/v1/contents/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
   exportContent: (id: string, platform: string) => request<{ title: string; markdown: string; html: string }>(`/api/v1/contents/${id}/export?platform=${platform}`),
   publications: () => request<Publication[]>('/api/v1/publications'),
   createPublication: (input: { contentId: string; versionId: string; platform: string; account: string }) => request<Publication>('/api/v1/publications', { method: 'POST', body: JSON.stringify(input) }),
   markPublished: (id: string, canonicalUrl: string) => request<Publication>(`/api/v1/publications/${id}/published`, { method: 'PATCH', body: JSON.stringify({ canonicalUrl }) }),
+  dispatchPublication: (id: string) => request<Publication>(`/api/v1/publications/${id}/dispatch`, { method: 'POST' }),
 };
