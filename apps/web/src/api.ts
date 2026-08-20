@@ -2,6 +2,7 @@ export interface Brand { id: string; name: string; website: string | null; alias
 export interface Prompt { id: string; question: string; intent: string; priority: number; tags: string[]; active: boolean }
 export interface Detection { id: string; promptId: string; provider: string; model: string; status: string; isMock: boolean; }
 export interface VisibilitySummary { sampleSize: number; mentionRate: number | null; averageRank: number | null; citationCount: number; citationDomains: string[] }
+export interface Opportunity { promptId: string; question: string; intent: string; priority: number; sampleSize: number; mentionCount: number; gapRate: number | null; score: number | null }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(path, { ...options, headers: { 'content-type': 'application/json', ...options?.headers } });
@@ -16,4 +17,5 @@ export const api = {
   detections: () => request<Detection[]>('/api/v1/detections'),
   detect: (input: { promptId: string; provider: string; brands: Array<{ id: string; name: string; aliases: string[]; kind: 'brand' }> }) => request<Detection>('/api/v1/detections', { method: 'POST', body: JSON.stringify(input) }),
   visibility: () => request<VisibilitySummary>('/api/v1/analytics/visibility'),
+  opportunities: (brandId: string) => request<Opportunity[]>(`/api/v1/opportunities?brandId=${encodeURIComponent(brandId)}`),
 };

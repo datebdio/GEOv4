@@ -72,5 +72,8 @@ describe('GEOv4 API', () => {
     expect((await app.inject({ method: 'PATCH', url: `/api/v1/tasks/${task.id}`, payload: { active: false } })).json()).toMatchObject({ active: false });
     expect((await app.inject({ method: 'GET', url: '/api/v1/detections' })).statusCode).toBe(200);
     expect((await app.inject({ method: 'GET', url: '/api/v1/analytics/visibility' })).json()).toMatchObject({ sampleSize: 0, mentionRate: null });
+    const opportunities = await app.inject({ method: 'GET', url: '/api/v1/opportunities?brandId=geo' });
+    expect(opportunities.statusCode).toBe(200);
+    expect(opportunities.json()).toContainEqual(expect.objectContaining({ promptId: prompt.id, sampleSize: 0, score: null }));
   });
 });

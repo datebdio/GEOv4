@@ -69,6 +69,17 @@ export function createApp(repositories: Repositories, detections?: DetectionServ
     const citationDomains = rows.flatMap((row) => row.analysis?.citations.map((item) => item.domain) ?? []);
     return { sampleSize: rows.length, mentionRate: rows.length ? mentioned.length / rows.length : null, averageRank: ranks.length ? ranks.reduce((sum, value) => sum + value, 0) / ranks.length : null, citationCount: citationDomains.length, citationDomains: [...new Set(citationDomains)] };
   });
+  app.get('/api/v1/opportunities', async (request, reply) => {
+    const query = z.object({ brandId: z.string().min(1) }).safeParse(request.query);
+    if (!query.success) return reply.code(400).send({ error: query.error.flatten() });
+    const [promptRows, detectionRows] = await Promise.all([repositories.prompts.list(), repositories.detections.list()]);
+    return promptRows.filter((prompt) => prompt.active).map((prompt) => {
+      const samples = detectionRows.filter((run) => run.promptId === prompt.id && run.status === 'succeeded' && !run.isMock);
+      const mentions = samples.filter((run) => run.analysis?.mentions.some((item) => item.brandId === query.data.brandId)).length;
+      const gapRate = samples.length ? 1 - mentions / samples.length : null;
+      return { promptId: prompt.id, question: prompt.question, intent: prompt.intent, priority: prompt.priority, sampleSize: samples.length, mentionCount: mentions, gapRate, score: gapRate === null ? null : Math.round(gapRate * prompt.priority) };
+    }).sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
+  });
 
   app.get('/api/v1/tasks', () => repositories.tasks.list());
   app.post('/api/v1/tasks', async (request, reply) => {
