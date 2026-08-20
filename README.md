@@ -88,3 +88,22 @@ AI 可见度检测
 - 禁止假数据冒充业务结果
 - 每个模块必须完整 CRUD
 - 每个功能必须可验收
+
+---
+
+# 当前工程
+
+- `apps/web`：Vue 3 + Ant Design Vue 企业控制台，按 Vue Vben Admin 5.7.0 设计方向建设。
+- `apps/api`：TypeScript/Fastify API 基线。
+- `packages/domain`：Provider无关的品牌提及、排名与Citation分析。
+- `docs/ARCHITECTURE.md`：系统边界和部署架构。
+- `docs/OPEN_SOURCE_REUSE.md`：开源复用与许可证边界。
+- `docs/DATA_MODEL.md`：核心数据模型。
+
+本地验证：
+
+```bash
+pnpm install
+pnpm test
+pnpm build
+```

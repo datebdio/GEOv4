@@ -1,0 +1,17 @@
+:root { font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif; color: #1f2937; background: #f4f6f9; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 1180px; }
+.shell { min-height: 100vh; }
+.brand { height: 64px; display: flex; align-items: center; gap: 10px; padding: 0 22px; color: white; font-size: 18px; font-weight: 700; letter-spacing: .3px; }
+.brand-mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; color: white; background: linear-gradient(135deg,#2563eb,#22d3ee); }
+.header { height: 64px; padding: 0 26px; background: white; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e8ecf2; }
+.crumb { margin-left: 14px; color: #8b95a7; font-size: 13px; font-weight: 400; }
+.content { padding: 24px 26px; }
+.hero { min-height: 176px; display: flex; justify-content: space-between; align-items: center; padding: 30px 34px; margin-bottom: 18px; border-radius: 12px; color: white; background: radial-gradient(circle at 80% 20%,rgba(34,211,238,.35),transparent 30%),linear-gradient(120deg,#102a56,#1553a4); box-shadow: 0 12px 32px rgba(18,64,128,.16); }
+.hero h1 { margin: 5px 0 8px; color: white; font-size: 30px; }
+.hero p { margin: 0; color: #d7e7ff; }
+.eyebrow { font-size: 11px; letter-spacing: 2px; color: #7dd3fc; }
+.metric-label { color: #667085; font-size: 13px; }
+.metric-value { margin: 8px 0; font-size: 29px; font-weight: 700; color: #173b70; }
+.metric-note { color: #98a2b3; font-size: 12px; }
+.workflow { margin: 18px 0; }
