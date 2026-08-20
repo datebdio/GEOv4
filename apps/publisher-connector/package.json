@@ -1,0 +1,8 @@
+{
+  "name": "@geov4/publisher-connector",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "start": "node src/server.mjs", "test": "node --test src/*.test.mjs" },
+  "dependencies": { "@sparticuz/chromium": "149.0.0", "puppeteer-core": "25.8.0" }
+}
