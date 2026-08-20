@@ -4,22 +4,36 @@
 
 - [x] Create README AI entrypoint
 - [x] Create AI context system
-- [ ] Complete Master PRD
-- [ ] Complete Module PRDs
-- [ ] Complete architecture documents
-- [ ] Complete open source research
+- [x] Complete Master PRD baseline
+- [x] Complete Module PRD baseline
+- [x] Complete architecture documents baseline
+- [x] Complete open source research baseline
+- [x] Create monorepo foundation
 
 ## Phase 1 - GEO Core
 
-- [ ] Prompt management
-- [ ] AI Provider abstraction
-- [ ] GEO visibility engine
-- [ ] Citation analysis
-- [ ] Competitor analysis
+- [x] Brand assets CRUD foundation
+- [x] Prompt management CRUD foundation
+- [x] AI Provider abstraction foundation
+- [x] GEO visibility analyzer foundation
+- [x] Citation extraction and source-domain aggregation foundation
+- [x] Competitor/brand opportunity-gap analysis foundation
+- [x] Monitoring task persistence foundation
 
 ## Phase 2 - Growth Workflow
 
-- [ ] Opportunity center
-- [ ] Content Studio
-- [ ] Publishing records
-- [ ] Effect tracking
+- [x] Opportunity center foundation
+- [x] Content Studio foundation and immutable versions
+- [x] Four-channel exports and publishing records
+- [x] Effect tracking comparison API
+- [x] Isolated browser publisher connector runtime
+- [x] Zhihu, Baijiahao, Toutiao and Sohu browser drivers
+- [ ] One-time authenticated session bootstrap for each real account
+- [ ] Live draft/publish acceptance on each real account
+
+## Deployment
+
+- [x] Docker Compose, Web Nginx and API migration baseline
+- [x] CI test/build and container build workflow
+- [ ] Container runtime acceptance
+- [ ] Target server deployment and external URL acceptance

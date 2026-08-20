@@ -1,0 +1,2 @@
+import test from 'node:test'; import assert from 'node:assert/strict'; import { platforms } from './platforms.mjs';
+test('four supported platforms have editor and safe draft actions', () => { assert.deepEqual(Object.keys(platforms).sort(), ['baijiahao', 'sohu', 'toutiao', 'zhihu']); for (const platform of Object.values(platforms)) { assert.ok(platform.url.startsWith('https://')); assert.ok(platform.editor.length); assert.ok(platform.draft.length); } });

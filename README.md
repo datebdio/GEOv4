@@ -88,3 +88,33 @@ AI 可见度检测
 - 禁止假数据冒充业务结果
 - 每个模块必须完整 CRUD
 - 每个功能必须可验收
+
+---
+
+# 当前工程
+
+- `apps/web`：Vue 3 + Ant Design Vue 企业控制台，按 Vue Vben Admin 5.7.0 设计方向建设。
+- `apps/api`：TypeScript/Fastify API 基线。
+- `packages/domain`：Provider无关的品牌提及、排名与Citation分析。
+- `docs/ARCHITECTURE.md`：系统边界和部署架构。
+- `docs/OPEN_SOURCE_REUSE.md`：开源复用与许可证边界。
+- `docs/DATA_MODEL.md`：核心数据模型。
+
+本地验证：
+
+```bash
+pnpm install
+pnpm test
+pnpm build
+```
+
+容器部署：
+
+```bash
+cp .env.example .env
+# 修改 MYSQL_PASSWORD、MYSQL_ROOT_PASSWORD 和 Provider 凭据
+docker compose up -d --build
+curl -f http://127.0.0.1:8080/health
+```
+
+API 启动时在 `RUN_MIGRATIONS=true` 下自动执行版本化 Drizzle migration。Web 仅暴露配置的 `WEB_PORT`，MySQL 保持在 Compose 私有网络。

@@ -1,32 +1,55 @@
 # Current Status
 
-Version: V4 Planning Baseline
+Version: V4 Phase 1 Foundation
 
-Status: Documentation and architecture preparation
+Status: Core vertical slice implemented; deployment baseline in verification
 
 ## Completed
 
 - Product direction confirmed
 - Enterprise-only scope confirmed
-- SoybeanAdmin UI direction confirmed
+- Vue Vben Admin UI direction confirmed
 - AI-first repository workflow defined
 - README AI entrypoint created
+- Phase 1 monorepo and enterprise console foundation
+- Visibility analyzer baseline with tests
+- API build and HTTP smoke verification
+- MySQL schema and initial SQL migration
+- Brand and Prompt repository/API CRUD foundation
+- Provider abstraction and persisted detection execution foundation
+- Monitoring task persistence and APIs
+- Detection history and non-mock visibility analytics
+- Dynamic brand opportunity-gap scoring
+- Operational Brand, Prompt, Detection and Opportunity console pages
+- Docker Compose deployment baseline with automatic migrations
+- GitHub Actions verification and container-build pipeline
+- OpenAI-compatible, DeepSeek, Perplexity, Anthropic and Gemini provider adapters
+- Content items, immutable versions, evidence URLs and approval workflow
+- Zhihu, Baijiahao, Toutiao and Sohu channel exports and idempotent publication records
+- Comparable pre/post publication effect snapshots
+- Evidence-aware AI content generation service
+- Authenticated idempotent HTTP publication dispatch protocol
 
 ## In Progress
 
-- Master PRD
-- Module PRDs
-- Open source reference analysis
-- Architecture design
-- Database design
+- Production deployment verification
+- Authenticated account acceptance on each target platform
 
 ## Not Started
 
-- Business code implementation
-- UI development
-- AI Provider integration
-- GEO engine implementation
+- Additional AI Provider adapters beyond OpenAI-compatible APIs
+- Redis task execution
+- Authenticated platform sessions and live draft/publish acceptance
 
 ## Next Milestone
 
-Finish complete product specification before coding.
+Complete isolated browser publishing connectors and authenticated acceptance.
+
+## Latest Verification
+
+- Automated tests: 17 passed (API 12, domain 3, connector 2).
+- Bundled Chromium launch and DOM rendering smoke passed.
+- Type checks: web, API and domain passed.
+- Production build: web, API and domain passed.
+- HTTP smoke: `/health` and `/api/v1/detections/mock` passed.
+- Deployment manifest created; container runtime unavailable in the current sandbox, so remote/container acceptance remains pending.

@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1787237068022,
+      "tag": "0000_goofy_shooting_star",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1787237583538,
+      "tag": "0001_lush_vapor",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1787238645549,
+      "tag": "0002_remarkable_kitty_pryde",
+      "breakpoints": true
+    }
+  ]
+}
