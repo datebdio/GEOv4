@@ -87,3 +87,48 @@ export const monitoringTasks = mysqlTable('monitoring_tasks', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
 }, (table) => [index('monitoring_tasks_active_next_idx').on(table.active, table.nextRunAt)]);
+
+export const contentItems = mysqlTable('content_items', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  brandId: varchar('brand_id', { length: 36 }).notNull().references(() => brands.id),
+  promptId: varchar('prompt_id', { length: 36 }).references(() => prompts.id, { onDelete: 'set null' }),
+  title: varchar('title', { length: 300 }).notNull(),
+  status: mysqlEnum('status', ['draft', 'review', 'approved', 'archived']).notNull().default('draft'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+}, (table) => [index('content_items_brand_status_idx').on(table.brandId, table.status)]);
+
+export const contentVersions = mysqlTable('content_versions', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  contentId: varchar('content_id', { length: 36 }).notNull().references(() => contentItems.id, { onDelete: 'cascade' }),
+  version: int('version').notNull(),
+  bodyMarkdown: text('body_markdown').notNull(),
+  evidenceUrls: json('evidence_urls').$type<string[]>().notNull(),
+  changeNote: varchar('change_note', { length: 500 }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [uniqueIndex('content_versions_content_version_unique').on(table.contentId, table.version)]);
+
+export const publicationRecords = mysqlTable('publication_records', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  contentId: varchar('content_id', { length: 36 }).notNull().references(() => contentItems.id),
+  versionId: varchar('version_id', { length: 36 }).notNull().references(() => contentVersions.id),
+  platform: mysqlEnum('platform', ['zhihu', 'baijiahao', 'toutiao', 'sohu']).notNull(),
+  account: varchar('account', { length: 160 }).notNull(),
+  status: mysqlEnum('status', ['prepared', 'drafted', 'published', 'failed']).notNull().default('prepared'),
+  idempotencyKey: varchar('idempotency_key', { length: 200 }).notNull(),
+  canonicalUrl: varchar('canonical_url', { length: 1000 }),
+  notes: text('notes'),
+  publishedAt: timestamp('published_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [uniqueIndex('publication_idempotency_unique').on(table.idempotencyKey)]);
+
+export const effectSnapshots = mysqlTable('effect_snapshots', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  publicationId: varchar('publication_id', { length: 36 }).notNull().references(() => publicationRecords.id, { onDelete: 'cascade' }),
+  baselineRunId: varchar('baseline_run_id', { length: 36 }).notNull().references(() => detectionRuns.id),
+  followupRunId: varchar('followup_run_id', { length: 36 }).notNull().references(() => detectionRuns.id),
+  mentionDelta: int('mention_delta').notNull(),
+  rankDelta: int('rank_delta'),
+  citationDelta: int('citation_delta').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [uniqueIndex('effect_publication_runs_unique').on(table.publicationId, table.baselineRunId, table.followupRunId)]);

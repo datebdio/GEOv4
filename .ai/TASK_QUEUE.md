@@ -23,9 +23,10 @@
 ## Phase 2 - Growth Workflow
 
 - [x] Opportunity center foundation
-- [ ] Content Studio
-- [ ] Publishing records
-- [ ] Effect tracking
+- [x] Content Studio foundation and immutable versions
+- [x] Four-channel exports and publishing records
+- [x] Effect tracking comparison API
+- [ ] Authenticated automatic publishing connectors
 
 ## Deployment
 

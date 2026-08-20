@@ -22,3 +22,4 @@ body { margin: 0; min-width: 1180px; }
 .run-card { margin-bottom: 18px; }
 .disclaimer { margin-top: 14px; color: #8b95a7; font-size: 12px; }
 .opportunity-filter { margin-bottom: 16px; }
+.export-preview { margin-top: 16px; font-family: ui-monospace, monospace; }

@@ -41,3 +41,13 @@ Next: provider credentials, real provider adapter and persisted detection execut
 - Added production Dockerfiles, Nginx API proxying, automatic database migrations and a Compose stack.
 - Verified API/domain tests, TypeScript checks and the Web production build.
 - Container acceptance is pending because the current sandbox does not expose a Docker runtime.
+
+## 2026-08-21 — Multi-provider, Content Studio and publishing workflow
+
+- Added dedicated Anthropic and Gemini adapters with citation/grounding extraction.
+- Added OpenAI-compatible routing for OpenAI, DeepSeek and Perplexity.
+- Added content items, immutable versions, evidence binding and approval status.
+- Added Zhihu, Baijiahao, Toutiao and Sohu channel rendering.
+- Added idempotent publication preparation, canonical URL confirmation and effect snapshots.
+- Added operational Content Studio and Publishing Center pages.
+- Expanded the verified suite to 13 API/domain tests.

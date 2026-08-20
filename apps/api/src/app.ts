@@ -4,6 +4,8 @@ import { analyzeVisibility, type BrandDictionary } from '@geov4/domain';
 import { z } from 'zod';
 import type { Repositories } from './repositories.js';
 import type { DetectionService } from './detection-service.js';
+import { createHash } from 'node:crypto';
+import { renderChannelContent } from './publishing.js';
 
 const requestSchema = z.object({
   prompt: z.string().min(1),
@@ -18,6 +20,8 @@ const requestSchema = z.object({
 const brandSchema = z.object({ name: z.string().trim().min(1).max(160), website: z.string().url().nullable().optional(), description: z.string().max(5000).nullable().optional(), locale: z.string().min(2).max(20).default('zh-CN'), aliases: z.array(z.string().trim().min(1).max(160)).default([]) });
 const promptSchema = z.object({ groupId: z.string().uuid().nullable().default(null), question: z.string().trim().min(2).max(5000), locale: z.string().min(2).max(20).default('zh-CN'), intent: z.enum(['informational', 'commercial', 'transactional', 'navigational']), priority: z.number().int().min(0).max(100).default(50), tags: z.array(z.string().trim().min(1).max(80)).default([]), active: z.boolean().optional() });
 const taskSchema = z.object({ name: z.string().trim().min(1).max(160), promptId: z.string().uuid(), provider: z.string().min(1), model: z.string().max(160).nullable().default(null), schedule: z.string().trim().min(1).max(80), active: z.boolean().optional() });
+const platformSchema = z.enum(['zhihu', 'baijiahao', 'toutiao', 'sohu']);
+const contentSchema = z.object({ brandId: z.string().uuid(), promptId: z.string().uuid().nullable().optional(), title: z.string().trim().min(1).max(300), bodyMarkdown: z.string().trim().min(20), evidenceUrls: z.array(z.string().url()).default([]) });
 
 export function createApp(repositories: Repositories, detections?: DetectionService) {
   const app = Fastify({ logger: false });
@@ -92,6 +96,53 @@ export function createApp(repositories: Repositories, detections?: DetectionServ
     const input = z.object({ active: z.boolean() }).safeParse(request.body);
     if (!input.success) return reply.code(400).send({ error: input.error.flatten() });
     return (await repositories.tasks.setActive((request.params as { id: string }).id, input.data.active)) ?? reply.code(404).send({ error: 'task_not_found' });
+  });
+
+  app.get('/api/v1/contents', () => repositories.contents.list());
+  app.post('/api/v1/contents', async (request, reply) => {
+    const input = contentSchema.safeParse(request.body); if (!input.success) return reply.code(400).send({ error: input.error.flatten() });
+    if (!(await repositories.brands.get(input.data.brandId))) return reply.code(404).send({ error: 'brand_not_found' });
+    if (input.data.promptId && !(await repositories.prompts.get(input.data.promptId))) return reply.code(404).send({ error: 'prompt_not_found' });
+    return reply.code(201).send(await repositories.contents.create(input.data));
+  });
+  app.post('/api/v1/contents/:id/versions', async (request, reply) => {
+    const input = contentSchema.pick({ bodyMarkdown: true, evidenceUrls: true }).extend({ changeNote: z.string().max(500).nullable().optional() }).safeParse(request.body);
+    if (!input.success) return reply.code(400).send({ error: input.error.flatten() });
+    return (await repositories.contents.addVersion((request.params as { id: string }).id, input.data)) ?? reply.code(404).send({ error: 'content_not_found' });
+  });
+  app.patch('/api/v1/contents/:id/status', async (request, reply) => {
+    const input = z.object({ status: z.enum(['draft', 'review', 'approved', 'archived']) }).safeParse(request.body); if (!input.success) return reply.code(400).send({ error: input.error.flatten() });
+    return (await repositories.contents.setStatus((request.params as { id: string }).id, input.data.status)) ?? reply.code(404).send({ error: 'content_not_found' });
+  });
+  app.get('/api/v1/contents/:id/export', async (request, reply) => {
+    const query = z.object({ platform: platformSchema }).safeParse(request.query); if (!query.success) return reply.code(400).send({ error: query.error.flatten() });
+    const content = await repositories.contents.get((request.params as { id: string }).id); if (!content) return reply.code(404).send({ error: 'content_not_found' });
+    const latest = content.versions.at(-1)!; return renderChannelContent({ platform: query.data.platform, title: content.title, bodyMarkdown: latest.bodyMarkdown });
+  });
+
+  app.get('/api/v1/publications', () => repositories.publications.list());
+  app.post('/api/v1/publications', async (request, reply) => {
+    const input = z.object({ contentId: z.string().uuid(), versionId: z.string().uuid(), platform: platformSchema, account: z.string().trim().min(1).max(160) }).safeParse(request.body); if (!input.success) return reply.code(400).send({ error: input.error.flatten() });
+    const content = await repositories.contents.get(input.data.contentId); if (!content) return reply.code(404).send({ error: 'content_not_found' });
+    if (content.status !== 'approved') return reply.code(409).send({ error: 'content_not_approved' });
+    if (!content.versions.some((version) => version.id === input.data.versionId)) return reply.code(404).send({ error: 'version_not_found' });
+    const idempotencyKey = createHash('sha256').update(`${input.data.contentId}:${input.data.versionId}:${input.data.platform}:${input.data.account}`).digest('hex');
+    return reply.code(201).send(await repositories.publications.create({ ...input.data, idempotencyKey }));
+  });
+  app.patch('/api/v1/publications/:id/published', async (request, reply) => {
+    const input = z.object({ canonicalUrl: z.string().url(), notes: z.string().max(5000).nullable().optional() }).safeParse(request.body); if (!input.success) return reply.code(400).send({ error: input.error.flatten() });
+    return (await repositories.publications.publish((request.params as { id: string }).id, input.data.canonicalUrl, input.data.notes)) ?? reply.code(404).send({ error: 'publication_not_found' });
+  });
+
+  app.get('/api/v1/effects', () => repositories.effects.list());
+  app.post('/api/v1/effects', async (request, reply) => {
+    const input = z.object({ publicationId: z.string().uuid(), baselineRunId: z.string().uuid(), followupRunId: z.string().uuid(), brandId: z.string().min(1) }).safeParse(request.body); if (!input.success) return reply.code(400).send({ error: input.error.flatten() });
+    const publications = await repositories.publications.list(); if (!publications.some((item) => item.id === input.data.publicationId && item.status === 'published')) return reply.code(404).send({ error: 'published_record_not_found' });
+    const [baseline, followup] = await Promise.all([repositories.detections.get(input.data.baselineRunId), repositories.detections.get(input.data.followupRunId)]);
+    if (!baseline || !followup || baseline.isMock || followup.isMock || baseline.promptId !== followup.promptId || baseline.provider !== followup.provider) return reply.code(409).send({ error: 'runs_not_comparable' });
+    const metric = (run: typeof baseline) => ({ mentioned: run.analysis?.mentions.some((item) => item.brandId === input.data.brandId) ? 1 : 0, rank: run.analysis?.mentions.find((item) => item.brandId === input.data.brandId)?.rank ?? null, citations: run.analysis?.citations.length ?? 0 });
+    const before = metric(baseline); const after = metric(followup);
+    return reply.code(201).send(await repositories.effects.create({ publicationId: input.data.publicationId, baselineRunId: baseline.id, followupRunId: followup.id, mentionDelta: after.mentioned - before.mentioned, rankDelta: before.rank === null || after.rank === null ? null : before.rank - after.rank, citationDelta: after.citations - before.citations }));
   });
 
   app.post('/api/v1/detections/mock', async (request, reply) => {

@@ -23,25 +23,29 @@ Status: Core vertical slice implemented; deployment baseline in verification
 - Operational Brand, Prompt, Detection and Opportunity console pages
 - Docker Compose deployment baseline with automatic migrations
 - GitHub Actions verification and container-build pipeline
+- OpenAI-compatible, DeepSeek, Perplexity, Anthropic and Gemini provider adapters
+- Content items, immutable versions, evidence URLs and approval workflow
+- Zhihu, Baijiahao, Toutiao and Sohu channel exports and idempotent publication records
+- Comparable pre/post publication effect snapshots
 
 ## In Progress
 
 - Production deployment verification
-- Content workflow data model
+- Isolated automatic-publishing connectors
 
 ## Not Started
 
 - Additional AI Provider adapters beyond OpenAI-compatible APIs
 - Redis task execution
-- Content publishing connectors
+- Authenticated platform publishing connectors
 
 ## Next Milestone
 
-Complete Content Studio → publishing record → effect tracking vertical slice.
+Complete isolated browser publishing connectors and authenticated acceptance.
 
 ## Latest Verification
 
-- Unit/API tests: 9 passed.
+- Unit/API tests: 13 passed.
 - Type checks: web, API and domain passed.
 - Production build: web, API and domain passed.
 - HTTP smoke: `/health` and `/api/v1/detections/mock` passed.

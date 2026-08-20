@@ -76,4 +76,22 @@ describe('GEOv4 API', () => {
     expect(opportunities.statusCode).toBe(200);
     expect(opportunities.json()).toContainEqual(expect.objectContaining({ promptId: prompt.id, sampleSize: 0, score: null }));
   });
+
+  it('tracks immutable content versions and idempotent four-channel publication records', async () => {
+    const brand = (await app.inject({ method: 'POST', url: '/api/v1/brands', payload: { name: '内容测试品牌', aliases: [] } })).json();
+    const prompt = (await app.inject({ method: 'POST', url: '/api/v1/prompts', payload: { question: '如何选择适合企业的 GEO 平台？', intent: 'commercial', tags: ['GEO'] } })).json();
+    const created = await app.inject({ method: 'POST', url: '/api/v1/contents', payload: { brandId: brand.id, promptId: prompt.id, title: '企业 GEO 平台选择指南', bodyMarkdown: '这是第一版正文，包含选择企业 GEO 平台时需要核验的完整证据和评估方法。', evidenceUrls: ['https://example.com/evidence'] } });
+    expect(created.statusCode).toBe(201); const content = created.json(); expect(content.versions).toHaveLength(1);
+    const versioned = await app.inject({ method: 'POST', url: `/api/v1/contents/${content.id}/versions`, payload: { bodyMarkdown: '这是第二版正文，补充数据来源、检测范围、平台差异和可复核的评估方法。', evidenceUrls: ['https://example.com/evidence'], changeNote: '补充证据' } });
+    expect(versioned.json().versions).toHaveLength(2); const latest = versioned.json().versions[1];
+    const exported = await app.inject({ method: 'GET', url: `/api/v1/contents/${content.id}/export?platform=zhihu` });
+    expect(exported.json()).toMatchObject({ platform: 'zhihu', title: '企业 GEO 平台选择指南' });
+    expect((await app.inject({ method: 'POST', url: '/api/v1/publications', payload: { contentId: content.id, versionId: latest.id, platform: 'zhihu', account: '企业账号' } })).statusCode).toBe(409);
+    await app.inject({ method: 'PATCH', url: `/api/v1/contents/${content.id}/status`, payload: { status: 'approved' } });
+    const first = (await app.inject({ method: 'POST', url: '/api/v1/publications', payload: { contentId: content.id, versionId: latest.id, platform: 'zhihu', account: '企业账号' } })).json();
+    const duplicate = (await app.inject({ method: 'POST', url: '/api/v1/publications', payload: { contentId: content.id, versionId: latest.id, platform: 'zhihu', account: '企业账号' } })).json();
+    expect(duplicate.id).toBe(first.id);
+    const published = await app.inject({ method: 'PATCH', url: `/api/v1/publications/${first.id}/published`, payload: { canonicalUrl: 'https://zhuanlan.zhihu.com/p/123' } });
+    expect(published.json()).toMatchObject({ status: 'published', canonicalUrl: 'https://zhuanlan.zhihu.com/p/123' });
+  });
 });
