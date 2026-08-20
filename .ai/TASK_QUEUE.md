@@ -16,12 +16,19 @@
 - [x] Prompt management CRUD foundation
 - [x] AI Provider abstraction foundation
 - [x] GEO visibility analyzer foundation
-- [ ] Citation analysis
-- [ ] Competitor analysis
+- [x] Citation extraction and source-domain aggregation foundation
+- [x] Competitor/brand opportunity-gap analysis foundation
+- [x] Monitoring task persistence foundation
 
 ## Phase 2 - Growth Workflow
 
-- [ ] Opportunity center
+- [x] Opportunity center foundation
 - [ ] Content Studio
 - [ ] Publishing records
 - [ ] Effect tracking
+
+## Deployment
+
+- [x] Docker Compose, Web Nginx and API migration baseline
+- [ ] Container runtime acceptance
+- [ ] Target server deployment and external URL acceptance

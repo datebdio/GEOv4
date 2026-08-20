@@ -31,3 +31,13 @@ Next: provider credentials, real provider adapter and persisted detection execut
 - Added detection orchestration with running/succeeded/failed persistence.
 - Persisted raw answer, model, latency and versioned visibility analysis.
 - Added end-to-end provider/detection API test; total suite now 8 tests.
+
+## 2026-08-21 — Monitoring, opportunity and deployment baseline
+
+- Added monitoring task persistence, migration and REST APIs.
+- Added detection history and aggregate visibility analytics that exclude mock runs.
+- Added brand opportunity-gap analysis derived from real prompt samples.
+- Replaced placeholder console modules with operational Brand, Prompt, Detection and Opportunity pages.
+- Added production Dockerfiles, Nginx API proxying, automatic database migrations and a Compose stack.
+- Verified API/domain tests, TypeScript checks and the Web production build.
+- Container acceptance is pending because the current sandbox does not expose a Docker runtime.

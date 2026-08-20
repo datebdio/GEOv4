@@ -107,3 +107,14 @@ pnpm install
 pnpm test
 pnpm build
 ```
+
+容器部署：
+
+```bash
+cp .env.example .env
+# 修改 MYSQL_PASSWORD、MYSQL_ROOT_PASSWORD 和 Provider 凭据
+docker compose up -d --build
+curl -f http://127.0.0.1:8080/health
+```
+
+API 启动时在 `RUN_MIGRATIONS=true` 下自动执行版本化 Drizzle migration。Web 仅暴露配置的 `WEB_PORT`，MySQL 保持在 Compose 私有网络。

@@ -2,7 +2,7 @@
 
 Version: V4 Phase 1 Foundation
 
-Status: Foundation implementation in progress
+Status: Core vertical slice implemented; deployment baseline in verification
 
 ## Completed
 
@@ -17,26 +17,31 @@ Status: Foundation implementation in progress
 - MySQL schema and initial SQL migration
 - Brand and Prompt repository/API CRUD foundation
 - Provider abstraction and persisted detection execution foundation
+- Monitoring task persistence and APIs
+- Detection history and non-mock visibility analytics
+- Dynamic brand opportunity-gap scoring
+- Operational Brand, Prompt, Detection and Opportunity console pages
+- Docker Compose deployment baseline with automatic migrations
 
 ## In Progress
 
-- Detection task scheduling and reporting
-- GEO domain analysis package
-- Enterprise console foundation
+- Production deployment verification
+- Content workflow data model
 
 ## Not Started
 
-- Real AI Provider integration
+- Additional AI Provider adapters beyond OpenAI-compatible APIs
 - Redis task execution
-- Production deployment
+- Content publishing connectors
 
 ## Next Milestone
 
-Complete the first traceable brand → prompt → detection vertical slice.
+Complete Content Studio → publishing record → effect tracking vertical slice.
 
 ## Latest Verification
 
-- Unit/API tests: 8 passed.
+- Unit/API tests: 9 passed.
 - Type checks: web, API and domain passed.
 - Production build: web, API and domain passed.
 - HTTP smoke: `/health` and `/api/v1/detections/mock` passed.
+- Deployment manifest created; container runtime unavailable in the current sandbox, so remote/container acceptance remains pending.
