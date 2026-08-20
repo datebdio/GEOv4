@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { asc, eq } from 'drizzle-orm';
 import type { DatabaseConnection } from './db/client.js';
 import { brandAliases, brands, promptGroups, prompts } from './db/schema.js';
+import { detectionRuns } from './db/schema.js';
+import type { ProviderAnswer, VisibilityAnalysis } from '@geov4/domain';
 
 export interface BrandRecord {
   id: string;
@@ -50,6 +52,12 @@ export interface Repositories {
     create(input: PromptInput): Promise<PromptRecord>;
     update(id: string, input: PromptInput): Promise<PromptRecord | null>;
     archive(id: string): Promise<boolean>;
+  };
+  detections: {
+    create(input: { promptId: string; provider: string; model: string; isMock: boolean }): Promise<{ id: string }>;
+    succeed(id: string, answer: ProviderAnswer, analysis: VisibilityAnalysis): Promise<unknown>;
+    fail(id: string, message: string): Promise<void>;
+    get(id: string): Promise<unknown | null>;
   };
 }
 
@@ -109,12 +117,22 @@ export function createMySqlRepositories(connection: DatabaseConnection): Reposit
         return result[0].affectedRows > 0;
       },
     },
+    detections: {
+      async create(input) { const id = randomUUID(); await db.insert(detectionRuns).values({ id, ...input, status: 'running' }); return { id }; },
+      async succeed(id, answer, analysis) {
+        await db.update(detectionRuns).set({ status: 'succeeded', model: answer.model, rawResponse: answer.rawText, analysis, latencyMs: answer.latencyMs, completedAt: new Date() }).where(eq(detectionRuns.id, id));
+        return (await db.select().from(detectionRuns).where(eq(detectionRuns.id, id)).limit(1))[0];
+      },
+      async fail(id, message) { await db.update(detectionRuns).set({ status: 'failed', errorMessage: message, completedAt: new Date() }).where(eq(detectionRuns.id, id)); },
+      async get(id) { return (await db.select().from(detectionRuns).where(eq(detectionRuns.id, id)).limit(1))[0] ?? null; },
+    },
   };
 }
 
 export function createMemoryRepositories(): Repositories {
   const brandRows = new Map<string, BrandRecord>();
   const promptRows = new Map<string, PromptRecord>();
+  const detectionRows = new Map<string, Record<string, unknown>>();
   return {
     brands: {
       async list() { return [...brandRows.values()]; },
@@ -129,6 +147,12 @@ export function createMemoryRepositories(): Repositories {
       async create(input) { const row = { id: randomUUID(), active: true, ...input }; promptRows.set(row.id, row); return row; },
       async update(id, input) { const old = promptRows.get(id); if (!old) return null; const row = { ...old, ...input }; promptRows.set(id, row); return row; },
       async archive(id) { const row = promptRows.get(id); if (!row) return false; promptRows.set(id, { ...row, active: false }); return true; },
+    },
+    detections: {
+      async create(input) { const row = { id: randomUUID(), ...input, status: 'running' }; detectionRows.set(row.id, row); return { id: row.id }; },
+      async succeed(id, answer, analysis) { const row = { ...detectionRows.get(id), status: 'succeeded', rawResponse: answer.rawText, analysis, model: answer.model, latencyMs: answer.latencyMs }; detectionRows.set(id, row); return row; },
+      async fail(id, message) { detectionRows.set(id, { ...detectionRows.get(id), status: 'failed', errorMessage: message }); },
+      async get(id) { return detectionRows.get(id) ?? null; },
     },
   };
 }

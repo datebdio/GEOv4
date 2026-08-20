@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import { analyzeVisibility, type BrandDictionary } from '@geov4/domain';
 import { z } from 'zod';
 import type { Repositories } from './repositories.js';
+import type { DetectionService } from './detection-service.js';
 
 const requestSchema = z.object({
   prompt: z.string().min(1),
@@ -17,7 +18,7 @@ const requestSchema = z.object({
 const brandSchema = z.object({ name: z.string().trim().min(1).max(160), website: z.string().url().nullable().optional(), description: z.string().max(5000).nullable().optional(), locale: z.string().min(2).max(20).default('zh-CN'), aliases: z.array(z.string().trim().min(1).max(160)).default([]) });
 const promptSchema = z.object({ groupId: z.string().uuid().nullable().default(null), question: z.string().trim().min(2).max(5000), locale: z.string().min(2).max(20).default('zh-CN'), intent: z.enum(['informational', 'commercial', 'transactional', 'navigational']), priority: z.number().int().min(0).max(100).default(50), tags: z.array(z.string().trim().min(1).max(80)).default([]), active: z.boolean().optional() });
 
-export function createApp(repositories: Repositories) {
+export function createApp(repositories: Repositories, detections?: DetectionService) {
   const app = Fastify({ logger: false });
   app.register(cors, { origin: true });
 
@@ -50,6 +51,14 @@ export function createApp(repositories: Repositories) {
     return (await repositories.prompts.update((request.params as { id: string }).id, input.data)) ?? reply.code(404).send({ error: 'prompt_not_found' });
   });
   app.delete('/api/v1/prompts/:id', async (request, reply) => (await repositories.prompts.archive((request.params as { id: string }).id)) ? reply.code(204).send() : reply.code(404).send({ error: 'prompt_not_found' }));
+
+  app.post('/api/v1/detections', async (request, reply) => {
+    if (!detections) return reply.code(503).send({ error: 'detection_service_unavailable' });
+    const input = z.object({ promptId: z.string().uuid(), provider: z.string().min(1), model: z.string().min(1).optional(), brands: z.array(z.object({ id: z.string(), name: z.string(), aliases: z.array(z.string()), kind: z.enum(['brand', 'competitor']) })).min(1) }).safeParse(request.body);
+    if (!input.success) return reply.code(400).send({ error: input.error.flatten() });
+    try { return reply.code(201).send(await detections.execute(input.data)); }
+    catch (error) { const message = error instanceof Error ? error.message : 'detection_failed'; return reply.code(message === 'prompt_not_found' ? 404 : 502).send({ error: message }); }
+  });
 
   app.post('/api/v1/detections/mock', async (request, reply) => {
     const parsed = requestSchema.safeParse(request.body);

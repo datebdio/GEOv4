@@ -22,3 +22,12 @@ Next: implement MySQL persistence and Brand/Prompt CRUD before a real provider a
 - Expanded the suite to 7 passing domain/API tests.
 
 Next: provider credentials, real provider adapter and persisted detection execution.
+
+## 2026-08-20 — Provider and persisted detection foundation
+
+- Added a provider-neutral execution contract and registry.
+- Added deterministic Mock Provider and OpenAI-compatible real provider.
+- Added timeout, HTTP error and empty-response failure handling.
+- Added detection orchestration with running/succeeded/failed persistence.
+- Persisted raw answer, model, latency and versioned visibility analysis.
+- Added end-to-end provider/detection API test; total suite now 8 tests.

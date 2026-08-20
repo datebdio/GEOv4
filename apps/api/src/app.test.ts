@@ -1,8 +1,11 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { createApp } from './app.js';
 import { createMemoryRepositories } from './repositories.js';
+import { DetectionService } from './detection-service.js';
+import { MockProvider, ProviderRegistry } from './providers.js';
 
-const app = createApp(createMemoryRepositories());
+const repositories = createMemoryRepositories();
+const app = createApp(repositories, new DetectionService(repositories, new ProviderRegistry([new MockProvider()])));
 afterAll(() => app.close());
 
 describe('GEOv4 API', () => {
@@ -51,5 +54,12 @@ describe('GEOv4 API', () => {
     const prompt = created.json();
     expect((await app.inject({ method: 'DELETE', url: `/api/v1/prompts/${prompt.id}` })).statusCode).toBe(204);
     expect((await app.inject({ method: 'GET', url: '/api/v1/prompts' })).json()[0]).toMatchObject({ active: false });
+  });
+
+  it('persists a traceable detection run through the provider abstraction', async () => {
+    const prompt = (await app.inject({ method: 'POST', url: '/api/v1/prompts', payload: { question: '推荐一个GEO平台', intent: 'commercial', tags: [] } })).json();
+    const response = await app.inject({ method: 'POST', url: '/api/v1/detections', payload: { promptId: prompt.id, provider: 'mock', brands: [{ id: 'geo', name: 'GEOv4', aliases: [], kind: 'brand' }] } });
+    expect(response.statusCode).toBe(201);
+    expect(response.json()).toMatchObject({ status: 'succeeded', rawResponse: '模拟回答：推荐一个GEO平台', analysis: { analyzerVersion: '0.1.0' } });
   });
 });

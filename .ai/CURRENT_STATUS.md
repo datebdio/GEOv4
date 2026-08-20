@@ -16,10 +16,11 @@ Status: Foundation implementation in progress
 - API build and HTTP smoke verification
 - MySQL schema and initial SQL migration
 - Brand and Prompt repository/API CRUD foundation
+- Provider abstraction and persisted detection execution foundation
 
 ## In Progress
 
-- Provider and detection task implementation
+- Detection task scheduling and reporting
 - GEO domain analysis package
 - Enterprise console foundation
 
@@ -35,7 +36,7 @@ Complete the first traceable brand → prompt → detection vertical slice.
 
 ## Latest Verification
 
-- Unit/API tests: 7 passed.
+- Unit/API tests: 8 passed.
 - Type checks: web, API and domain passed.
 - Production build: web, API and domain passed.
 - HTTP smoke: `/health` and `/api/v1/detections/mock` passed.

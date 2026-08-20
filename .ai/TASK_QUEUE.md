@@ -14,7 +14,7 @@
 
 - [x] Brand assets CRUD foundation
 - [x] Prompt management CRUD foundation
-- [ ] AI Provider abstraction
+- [x] AI Provider abstraction foundation
 - [x] GEO visibility analyzer foundation
 - [ ] Citation analysis
 - [ ] Competitor analysis
