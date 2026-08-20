@@ -30,5 +30,6 @@
 ## Deployment
 
 - [x] Docker Compose, Web Nginx and API migration baseline
+- [x] CI test/build and container build workflow
 - [ ] Container runtime acceptance
 - [ ] Target server deployment and external URL acceptance

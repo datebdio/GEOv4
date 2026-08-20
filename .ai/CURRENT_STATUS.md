@@ -22,6 +22,7 @@ Status: Core vertical slice implemented; deployment baseline in verification
 - Dynamic brand opportunity-gap scoring
 - Operational Brand, Prompt, Detection and Opportunity console pages
 - Docker Compose deployment baseline with automatic migrations
+- GitHub Actions verification and container-build pipeline
 
 ## In Progress
 
