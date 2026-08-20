@@ -14,17 +14,18 @@ Status: Foundation implementation in progress
 - Phase 1 monorepo and enterprise console foundation
 - Visibility analyzer baseline with tests
 - API build and HTTP smoke verification
+- MySQL schema and initial SQL migration
+- Brand and Prompt repository/API CRUD foundation
 
 ## In Progress
 
-- Brand/Prompt/Provider module implementation
+- Provider and detection task implementation
 - GEO domain analysis package
 - Enterprise console foundation
 
 ## Not Started
 
 - Real AI Provider integration
-- MySQL persistence
 - Redis task execution
 - Production deployment
 
@@ -34,7 +35,7 @@ Complete the first traceable brand → prompt → detection vertical slice.
 
 ## Latest Verification
 
-- Unit/API tests: 5 passed.
+- Unit/API tests: 7 passed.
 - Type checks: web, API and domain passed.
 - Production build: web, API and domain passed.
 - HTTP smoke: `/health` and `/api/v1/detections/mock` passed.

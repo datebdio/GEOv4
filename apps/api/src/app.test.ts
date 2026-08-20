@@ -1,7 +1,8 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { createApp } from './app.js';
+import { createMemoryRepositories } from './repositories.js';
 
-const app = createApp();
+const app = createApp(createMemoryRepositories());
 afterAll(() => app.close());
 
 describe('GEOv4 API', () => {
@@ -29,5 +30,26 @@ describe('GEOv4 API', () => {
       response: { isMock: true },
       analysis: { analyzerVersion: '0.1.0' },
     });
+  });
+
+  it('supports the brand lifecycle without hardcoded rows', async () => {
+    const created = await app.inject({ method: 'POST', url: '/api/v1/brands', payload: { name: '界首漫乐城', aliases: ['MELO CITY'], website: 'https://example.com' } });
+    expect(created.statusCode).toBe(201);
+    const brand = created.json();
+    expect(brand.aliases).toEqual(['MELO CITY']);
+    const listed = await app.inject({ method: 'GET', url: '/api/v1/brands' });
+    expect(listed.json()).toHaveLength(1);
+    expect((await app.inject({ method: 'DELETE', url: `/api/v1/brands/${brand.id}` })).statusCode).toBe(204);
+    expect((await app.inject({ method: 'GET', url: `/api/v1/brands/${brand.id}` })).json()).toMatchObject({ archived: true });
+  });
+
+  it('validates and archives prompts', async () => {
+    const invalid = await app.inject({ method: 'POST', url: '/api/v1/prompts', payload: { question: '' } });
+    expect(invalid.statusCode).toBe(400);
+    const created = await app.inject({ method: 'POST', url: '/api/v1/prompts', payload: { question: '界首有哪些适合家庭周末游玩的商场？', intent: 'commercial', priority: 80, tags: ['商场'] } });
+    expect(created.statusCode).toBe(201);
+    const prompt = created.json();
+    expect((await app.inject({ method: 'DELETE', url: `/api/v1/prompts/${prompt.id}` })).statusCode).toBe(204);
+    expect((await app.inject({ method: 'GET', url: '/api/v1/prompts' })).json()[0]).toMatchObject({ active: false });
   });
 });

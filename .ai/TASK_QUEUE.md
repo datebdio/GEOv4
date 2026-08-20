@@ -12,8 +12,8 @@
 
 ## Phase 1 - GEO Core
 
-- [ ] Brand assets CRUD
-- [ ] Prompt management CRUD
+- [x] Brand assets CRUD foundation
+- [x] Prompt management CRUD foundation
 - [ ] AI Provider abstraction
 - [x] GEO visibility analyzer foundation
 - [ ] Citation analysis

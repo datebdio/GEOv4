@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { analyzeVisibility, type BrandDictionary } from '@geov4/domain';
 import { z } from 'zod';
+import type { Repositories } from './repositories.js';
 
 const requestSchema = z.object({
   prompt: z.string().min(1),
@@ -13,11 +14,42 @@ const requestSchema = z.object({
   })).min(1),
 });
 
-export function createApp() {
+const brandSchema = z.object({ name: z.string().trim().min(1).max(160), website: z.string().url().nullable().optional(), description: z.string().max(5000).nullable().optional(), locale: z.string().min(2).max(20).default('zh-CN'), aliases: z.array(z.string().trim().min(1).max(160)).default([]) });
+const promptSchema = z.object({ groupId: z.string().uuid().nullable().default(null), question: z.string().trim().min(2).max(5000), locale: z.string().min(2).max(20).default('zh-CN'), intent: z.enum(['informational', 'commercial', 'transactional', 'navigational']), priority: z.number().int().min(0).max(100).default(50), tags: z.array(z.string().trim().min(1).max(80)).default([]), active: z.boolean().optional() });
+
+export function createApp(repositories: Repositories) {
   const app = Fastify({ logger: false });
   app.register(cors, { origin: true });
 
   app.get('/health', async () => ({ status: 'ok', version: '0.1.0' }));
+
+  app.get('/api/v1/brands', () => repositories.brands.list());
+  app.get('/api/v1/brands/:id', async (request, reply) => {
+    const item = await repositories.brands.get((request.params as { id: string }).id);
+    return item ?? reply.code(404).send({ error: 'brand_not_found' });
+  });
+  app.post('/api/v1/brands', async (request, reply) => {
+    const input = brandSchema.safeParse(request.body);
+    return input.success ? reply.code(201).send(await repositories.brands.create(input.data)) : reply.code(400).send({ error: input.error.flatten() });
+  });
+  app.put('/api/v1/brands/:id', async (request, reply) => {
+    const input = brandSchema.safeParse(request.body);
+    if (!input.success) return reply.code(400).send({ error: input.error.flatten() });
+    return (await repositories.brands.update((request.params as { id: string }).id, input.data)) ?? reply.code(404).send({ error: 'brand_not_found' });
+  });
+  app.delete('/api/v1/brands/:id', async (request, reply) => (await repositories.brands.archive((request.params as { id: string }).id)) ? reply.code(204).send() : reply.code(404).send({ error: 'brand_not_found' }));
+
+  app.get('/api/v1/prompts', () => repositories.prompts.list());
+  app.post('/api/v1/prompts', async (request, reply) => {
+    const input = promptSchema.safeParse(request.body);
+    return input.success ? reply.code(201).send(await repositories.prompts.create(input.data)) : reply.code(400).send({ error: input.error.flatten() });
+  });
+  app.put('/api/v1/prompts/:id', async (request, reply) => {
+    const input = promptSchema.safeParse(request.body);
+    if (!input.success) return reply.code(400).send({ error: input.error.flatten() });
+    return (await repositories.prompts.update((request.params as { id: string }).id, input.data)) ?? reply.code(404).send({ error: 'prompt_not_found' });
+  });
+  app.delete('/api/v1/prompts/:id', async (request, reply) => (await repositories.prompts.archive((request.params as { id: string }).id)) ? reply.code(204).send() : reply.code(404).send({ error: 'prompt_not_found' }));
 
   app.post('/api/v1/detections/mock', async (request, reply) => {
     const parsed = requestSchema.safeParse(request.body);
