@@ -62,4 +62,15 @@ describe('GEOv4 API', () => {
     expect(response.statusCode).toBe(201);
     expect(response.json()).toMatchObject({ status: 'succeeded', rawResponse: '模拟回答：推荐一个GEO平台', analysis: { analyzerVersion: '0.1.0' } });
   });
+
+  it('creates monitoring tasks and exposes detection analytics without mock pollution', async () => {
+    const prompt = (await app.inject({ method: 'POST', url: '/api/v1/prompts', payload: { question: '什么是生成式搜索优化？', intent: 'informational', tags: ['GEO'] } })).json();
+    const created = await app.inject({ method: 'POST', url: '/api/v1/tasks', payload: { name: '每日 GEO 检测', promptId: prompt.id, provider: 'mock', schedule: '0 8 * * *' } });
+    expect(created.statusCode).toBe(201);
+    const task = created.json();
+    expect(task).toMatchObject({ active: true, schedule: '0 8 * * *' });
+    expect((await app.inject({ method: 'PATCH', url: `/api/v1/tasks/${task.id}`, payload: { active: false } })).json()).toMatchObject({ active: false });
+    expect((await app.inject({ method: 'GET', url: '/api/v1/detections' })).statusCode).toBe(200);
+    expect((await app.inject({ method: 'GET', url: '/api/v1/analytics/visibility' })).json()).toMatchObject({ sampleSize: 0, mentionRate: null });
+  });
 });

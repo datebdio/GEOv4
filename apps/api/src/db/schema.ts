@@ -11,6 +11,7 @@ import {
   uniqueIndex,
   varchar,
 } from 'drizzle-orm/mysql-core';
+import type { VisibilityAnalysis } from '@geov4/domain';
 
 export const brands = mysqlTable('brands', {
   id: varchar('id', { length: 36 }).primaryKey(),
@@ -65,10 +66,24 @@ export const detectionRuns = mysqlTable('detection_runs', {
   status: mysqlEnum('status', ['queued', 'running', 'succeeded', 'failed', 'cancelled']).notNull(),
   isMock: boolean('is_mock').notNull().default(false),
   rawResponse: text('raw_response'),
-  analysis: json('analysis'),
+  analysis: json('analysis').$type<VisibilityAnalysis>(),
   errorCode: varchar('error_code', { length: 120 }),
   errorMessage: text('error_message'),
   latencyMs: int('latency_ms'),
   requestedAt: timestamp('requested_at').notNull().defaultNow(),
   completedAt: timestamp('completed_at'),
 }, (table) => [index('detection_prompt_time_idx').on(table.promptId, table.requestedAt)]);
+
+export const monitoringTasks = mysqlTable('monitoring_tasks', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  name: varchar('name', { length: 160 }).notNull(),
+  promptId: varchar('prompt_id', { length: 36 }).notNull().references(() => prompts.id, { onDelete: 'cascade' }),
+  provider: varchar('provider', { length: 80 }).notNull(),
+  model: varchar('model', { length: 160 }),
+  schedule: varchar('schedule', { length: 80 }).notNull(),
+  active: boolean('active').notNull().default(true),
+  lastRunAt: timestamp('last_run_at'),
+  nextRunAt: timestamp('next_run_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+}, (table) => [index('monitoring_tasks_active_next_idx').on(table.active, table.nextRunAt)]);

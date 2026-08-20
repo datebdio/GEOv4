@@ -15,3 +15,9 @@ body { margin: 0; min-width: 1180px; }
 .metric-value { margin: 8px 0; font-size: 29px; font-weight: 700; color: #173b70; }
 .metric-note { color: #98a2b3; font-size: 12px; }
 .workflow { margin: 18px 0; }
+.notice { margin-bottom: 16px; }
+.toolbar { margin-bottom: 20px; padding: 16px; border-radius: 8px; background: #f7f9fc; }
+.question-input { width: 360px; }
+.empty-panel { margin-top: 18px; padding: 56px; background: white; border-radius: 8px; }
+.run-card { margin-bottom: 18px; }
+.disclaimer { margin-top: 14px; color: #8b95a7; font-size: 12px; }

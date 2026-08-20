@@ -1,8 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { asc, eq } from 'drizzle-orm';
 import type { DatabaseConnection } from './db/client.js';
-import { brandAliases, brands, promptGroups, prompts } from './db/schema.js';
-import { detectionRuns } from './db/schema.js';
+import { brandAliases, brands, detectionRuns, monitoringTasks, promptGroups, prompts } from './db/schema.js';
 import type { ProviderAnswer, VisibilityAnalysis } from '@geov4/domain';
 
 export interface BrandRecord {
@@ -38,6 +37,29 @@ export interface PromptInput extends Omit<PromptRecord, 'id' | 'active'> {
   active?: boolean;
 }
 
+export interface DetectionRecord {
+  id: string;
+  promptId: string;
+  provider: string;
+  model: string;
+  status: 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled';
+  isMock: boolean;
+  rawResponse?: string | null;
+  analysis?: VisibilityAnalysis | null;
+  latencyMs?: number | null;
+  errorMessage?: string | null;
+}
+
+export interface MonitoringTaskRecord {
+  id: string;
+  name: string;
+  promptId: string;
+  provider: string;
+  model: string | null;
+  schedule: string;
+  active: boolean;
+}
+
 export interface Repositories {
   brands: {
     list(): Promise<BrandRecord[]>;
@@ -57,7 +79,13 @@ export interface Repositories {
     create(input: { promptId: string; provider: string; model: string; isMock: boolean }): Promise<{ id: string }>;
     succeed(id: string, answer: ProviderAnswer, analysis: VisibilityAnalysis): Promise<unknown>;
     fail(id: string, message: string): Promise<void>;
-    get(id: string): Promise<unknown | null>;
+    get(id: string): Promise<DetectionRecord | null>;
+    list(): Promise<DetectionRecord[]>;
+  };
+  tasks: {
+    list(): Promise<MonitoringTaskRecord[]>;
+    create(input: Omit<MonitoringTaskRecord, 'id' | 'active'> & { active?: boolean }): Promise<MonitoringTaskRecord>;
+    setActive(id: string, active: boolean): Promise<MonitoringTaskRecord | null>;
   };
 }
 
@@ -125,6 +153,12 @@ export function createMySqlRepositories(connection: DatabaseConnection): Reposit
       },
       async fail(id, message) { await db.update(detectionRuns).set({ status: 'failed', errorMessage: message, completedAt: new Date() }).where(eq(detectionRuns.id, id)); },
       async get(id) { return (await db.select().from(detectionRuns).where(eq(detectionRuns.id, id)).limit(1))[0] ?? null; },
+      list: () => db.select().from(detectionRuns).orderBy(asc(detectionRuns.requestedAt)) as Promise<DetectionRecord[]>,
+    },
+    tasks: {
+      list: () => db.select().from(monitoringTasks).orderBy(asc(monitoringTasks.createdAt)),
+      async create(input) { const id = randomUUID(); await db.insert(monitoringTasks).values({ id, ...input, active: input.active ?? true }); return (await this.list()).find((item) => item.id === id)!; },
+      async setActive(id, active) { const result = await db.update(monitoringTasks).set({ active }).where(eq(monitoringTasks.id, id)); return result[0].affectedRows ? (await this.list()).find((item) => item.id === id) ?? null : null; },
     },
   };
 }
@@ -132,7 +166,8 @@ export function createMySqlRepositories(connection: DatabaseConnection): Reposit
 export function createMemoryRepositories(): Repositories {
   const brandRows = new Map<string, BrandRecord>();
   const promptRows = new Map<string, PromptRecord>();
-  const detectionRows = new Map<string, Record<string, unknown>>();
+  const detectionRows = new Map<string, DetectionRecord>();
+  const taskRows = new Map<string, MonitoringTaskRecord>();
   return {
     brands: {
       async list() { return [...brandRows.values()]; },
@@ -149,10 +184,16 @@ export function createMemoryRepositories(): Repositories {
       async archive(id) { const row = promptRows.get(id); if (!row) return false; promptRows.set(id, { ...row, active: false }); return true; },
     },
     detections: {
-      async create(input) { const row = { id: randomUUID(), ...input, status: 'running' }; detectionRows.set(row.id, row); return { id: row.id }; },
-      async succeed(id, answer, analysis) { const row = { ...detectionRows.get(id), status: 'succeeded', rawResponse: answer.rawText, analysis, model: answer.model, latencyMs: answer.latencyMs }; detectionRows.set(id, row); return row; },
-      async fail(id, message) { detectionRows.set(id, { ...detectionRows.get(id), status: 'failed', errorMessage: message }); },
+      async create(input) { const row: DetectionRecord = { id: randomUUID(), ...input, status: 'running' }; detectionRows.set(row.id, row); return { id: row.id }; },
+      async succeed(id, answer, analysis) { const row: DetectionRecord = { ...detectionRows.get(id)!, status: 'succeeded', rawResponse: answer.rawText, analysis, model: answer.model, latencyMs: answer.latencyMs }; detectionRows.set(id, row); return row; },
+      async fail(id, message) { const row = detectionRows.get(id); if (row) detectionRows.set(id, { ...row, status: 'failed', errorMessage: message }); },
       async get(id) { return detectionRows.get(id) ?? null; },
+      async list() { return [...detectionRows.values()]; },
+    },
+    tasks: {
+      async list() { return [...taskRows.values()]; },
+      async create(input) { const row = { id: randomUUID(), active: true, ...input }; taskRows.set(row.id, row); return row; },
+      async setActive(id, active) { const row = taskRows.get(id); if (!row) return null; const updated = { ...row, active }; taskRows.set(id, updated); return updated; },
     },
   };
 }
